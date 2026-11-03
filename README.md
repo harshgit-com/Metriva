@@ -1,41 +1,40 @@
 # Metriva
 
-Metriva is a dataset-first analytics and dashboard-building MVP. The product flow is: upload a spreadsheet → inspect its schema → accept or edit suggested KPIs and charts → filter and configure the dashboard → ask questions about the data → save a dashboard.
+Metriva is a dataset-first analytics workspace prototype. Its core flow is **connect a spreadsheet → inspect its real fields → generate relevant summaries and charts → filter the records → ask questions about the data → save a report configuration**.
 
 ## Run it
 
-Open `index.html` in a modern browser. No build step or package installation is required.
+Open `index.html` in a modern browser. There is no build step or package installation.
 
-## Current working prototype features
+## Included in this version
 
-- CSV import with quoted-cell parsing; Excel `.xlsx` and `.xls` import via SheetJS loaded on demand from jsDelivr.
-- No pre-filled business dataset or fabricated metrics. A blank workspace is shown until the user imports data.
-- Column inference based on uploaded values: numeric, date, category and text.
-- Suggested metrics and visualisations are selected from detected columns, not hard-coded field names.
-- Editable KPI cards with Sum, Average, Count, Minimum and Maximum calculations.
-- Editable bar, line, area, donut and table visualisations with configurable dimension, measure and aggregation.
-- A dashboard-level dimension filter that updates KPI cards, charts and underlying records together.
-- Dataset preview and data profile.\n- Computed insight panel covering numeric summaries, dominant categories, missing-value completeness and date coverage for the active filtered records.
-- Prompt interface with a local command interpreter for supported questions and dashboard actions (summaries, missing values, totals, averages, top categories, adding charts/metrics and date trends).
-- Save and reopen dashboard snapshots in browser local storage.
-- Responsive layout and light/dark appearance.
+- New responsive Metriva interface with a custom SVG brand mark, desktop sidebar, mobile navigation, top search bar, and light/dark appearance.
+- CSV import with quoted-cell parsing and drag-and-drop.
+- Excel `.xlsx` / `.xls` import through SheetJS loaded on demand from jsDelivr; the first worksheet is used.
+- Dataset profiling based on actual imported values: numeric, date, category, text and empty fields.
+- Dashboard KPI cards derived from the uploaded dataset: record count, semantic numeric total when a suitable column exists, numeric average, and missing-cell count.
+- Charts generated from detected fields: time series when a date and numeric field exist, category comparison when suitable dimensions exist, or a record-count breakdown otherwise.
+- Dashboard filter that recalculates the metrics, charts, insights and record preview for the selected dimension value.
+- Computed analysis for numeric totals/averages/ranges, common categories, missing values and date coverage.
+- Data Analyst page with a local deterministic query helper for summaries, missing values, numeric statistics, record counts and category rankings.
+- Saved report configurations in browser local storage.
+- Responsive layouts for desktop, tablet and mobile.
 
 ## Important limitations
 
-This is still a client-side MVP, not a production SaaS. The prompt interface is a deterministic local command interpreter, **not a connected generative AI model**. It supports a limited set of intents and should not be presented as general AI reasoning. A production AI copilot needs a secure backend and model-provider integration; API keys must never be placed in browser code.
+This is a **front-end prototype**, not a production SaaS. The Data Analyst helper is rule-based local code, **not a real generative AI model**. It supports a limited set of question patterns and does not provide open-ended reasoning. A real AI analyst requires a secure server-side model integration; API keys must never be embedded in browser JavaScript.
 
-There is no authentication, cloud database, cross-device sync, team workspace, live data connector, server-side permissions, billing, or production audit log. Dashboard snapshots are stored in the current browser and may be lost if browser storage is cleared. Imported files are processed locally. Excel support requires the SheetJS CDN to load. Only the first worksheet is imported. Very large files may exceed browser storage or browser memory.
+There is no authentication, cloud database, cross-device sync, team collaboration, live source connectors, sharing permissions, billing or production audit log. The current dataset remains in browser memory for the active session. Saved reports store configuration/metadata, not a copy of the uploaded file; re-import the same file to restore its data. Clearing browser storage can remove saved reports. Excel import needs an internet connection to load SheetJS.
 
-Do not use this prototype as the only copy of important business data. Keep the original spreadsheet and export backups.
+No end-to-end browser test or production deployment has been completed yet. Keep original copies of important data.
 
-## Production roadmap
+## Suggested next engineering milestones
 
-1. Add authentication, secure workspaces and per-user authorization.
-2. Add database and object storage with reliable dataset versioning.
-3. Move file parsing and large-scale analytics to a secure backend.
-4. Connect a real AI copilot through a server-side provider integration with schema-aware tool calling and grounded responses.
-5. Add connectors, collaboration, dashboard sharing, audit logs, billing and automated tests.
+1. Add automated browser tests for CSV/XLSX upload, filters, charts, saved reports and mobile navigation.
+2. Add secure accounts, backend storage and dataset versioning.
+3. Add a real AI analyst through a server-side integration with schema-aware tools and grounded answers.
+4. Add connectors, sharing permissions, collaboration and audit logs.
 
-## Deploy with GitHub Pages
+## Static deployment
 
-In repository Settings → Pages, select **Deploy from a branch**, choose **main** and **/(root)**, then save. GitHub Pages can host this static prototype, but it cannot provide the secure backend capabilities listed above.
+For a static preview, use GitHub Pages: repository **Settings → Pages → Deploy from a branch → main → /(root)**. This hosts the front-end only; it does not add backend or AI capabilities.
