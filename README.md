@@ -12,8 +12,9 @@ Open `index.html` in a modern browser. There is no build step or package install
 - CSV import with quoted-cell parsing and drag-and-drop.
 - Excel `.xlsx` / `.xls` import through SheetJS loaded on demand from jsDelivr; the first worksheet is used.
 - Dataset profiling based on actual imported values: numeric, date, category, text and empty fields.
-- Dashboard KPI cards derived from the uploaded dataset: record count, semantic numeric total when a suitable column exists, numeric average, and missing-cell count.
-- Charts generated from detected fields: time series when a date and numeric field exist, category comparison when suitable dimensions exist, or a record-count breakdown otherwise.
+- Expanded dataset-aware KPI cards. General datasets include numeric totals and averages, unique category counts, completeness and duplicate-row counts. Event datasets additionally detect event names/types, user IDs, session IDs, timestamps, pages/screens, devices and browsers to calculate event volume, unique users, unique sessions, event types, events per user/session and active dates.
+- Multiple charts generated from the detected schema rather than a fixed demo: chronological event/activity timelines, event-type rankings, top pages/screens, device and browser mix, category distributions, numeric comparisons and date trends. Charts recalculate with dashboard filters.
+- Event-aware written insights covering audience, session behaviour, most visited pages, activity types, date coverage, data quality and duplicates.
 - Dashboard filter that recalculates the metrics, charts, insights and record preview for the selected dimension value.
 - Computed analysis for numeric totals/averages/ranges, common categories, missing values and date coverage.
 - Data Analyst page with a local deterministic query helper for summaries, missing values, numeric statistics, record counts and category rankings.
