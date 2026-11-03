@@ -15,7 +15,7 @@ Open `index.html` in a modern browser. No build step or package installation is 
 - Editable KPI cards with Sum, Average, Count, Minimum and Maximum calculations.
 - Editable bar, line, area, donut and table visualisations with configurable dimension, measure and aggregation.
 - A dashboard-level dimension filter that updates KPI cards, charts and underlying records together.
-- Dataset preview and data profile.
+- Dataset preview and data profile.\n- Computed insight panel covering numeric summaries, dominant categories, missing-value completeness and date coverage for the active filtered records.
 - Prompt interface with a local command interpreter for supported questions and dashboard actions (summaries, missing values, totals, averages, top categories, adding charts/metrics and date trends).
 - Save and reopen dashboard snapshots in browser local storage.
 - Responsive layout and light/dark appearance.
