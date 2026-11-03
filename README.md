@@ -1,32 +1,38 @@
 # Metriva
 
-Metriva is a responsive analytics workspace prototype that turns data into understandable dashboards.
+Metriva is a browser-based analytics workspace MVP. It turns spreadsheet rows into calculated summaries, charts and saved dashboard snapshots.
 
-## Run locally
+## Run it
 
-Open `index.html` in a modern browser. No build step or package installation is required.
+Open `index.html` in a modern browser. There is no build step or package installation.
 
-## Prototype features
+## Working in-browser features
 
-- Responsive workspace layout with Overview, My dashboards, Data hub, Analyst, Reports and Settings.
-- Sample KPI cards, revenue trend, category breakdown and transaction table.
-- Local CSV import, basic CSV parsing, column preview and row counts.
-- Demo analyst responses for the included sample dataset.
-- Mobile navigation and responsive layouts.
+- Responsive workspace with Overview, My dashboards, Data hub, Analyst, Reports and Settings.
+- Import CSV files directly in the browser, including quoted cells and comma-containing values.
+- Import Excel `.xlsx` and `.xls` files using SheetJS loaded on demand from jsDelivr. An internet connection is needed the first time Excel support loads.
+- Automatic detection of numeric, date-like and category columns.
+- KPI calculations, numeric trend chart, category breakdown, top-value bars and recent-row preview based on the active dataset.
+- Rule-based analyst questions calculated from the actual imported rows: totals, averages, row counts, top categories, missing values, columns and date trends.
+- Save and reopen dashboard snapshots in browser local storage.
+- Export the active dataset as CSV and print/save the dashboard view as PDF.
+- Light/dark appearance and responsive mobile navigation.
+- File processing happens in the browser; imported data is not uploaded to a Metriva server.
 
-## Important limitations
+## Current limitations — not production SaaS yet
 
-This is a front-end prototype, not a production SaaS application. CSV files are read locally in the browser and are not uploaded or persisted. The analyst uses illustrative responses; it is not connected to an AI model or a verified data query engine.
+This is a client-side MVP, not a multi-user production service. It has no user authentication, cloud database, cross-device sync, team workspaces, server-side authorization, live connectors, billing or real generative-AI integration. The Analyst is deterministic and rule-based; it does not use an LLM. Dashboard snapshots and imported data are stored only in the current browser and can be lost if browser storage is cleared. Large datasets may exceed browser storage limits. Excel import requires the external SheetJS CDN to be reachable.
 
-Production work still required:
-- Authentication and workspace membership.
-- Secure backend storage and saved dashboards.
-- Robust Excel/CSV ingestion, validation, joins and deterministic metric calculations.
-- AI recommendations and conversational dashboard editing.
-- Google Sheets and other live data connectors.
-- Sharing permissions, exports, audit logs and billing.
-- Server-side authorization, privacy controls, tests and deployment configuration.
+Do not store sensitive or business-critical data here as the only copy. Export and keep a backup.
+
+## Recommended production milestones
+
+1. Add authentication and secure workspace membership.
+2. Add a backend database and object storage with per-user access rules.
+3. Move ingestion and large-file processing to a validated backend pipeline.
+4. Add a server-side AI provider integration with secrets kept off the client.
+5. Add real connectors, sharing permissions, audit logs, billing and automated tests.
 
 ## Deploy with GitHub Pages
 
-In the repository settings, open **Pages**, choose **Deploy from a branch**, select **main** and **/(root)**, then save. GitHub Pages will publish the root `index.html` after its deployment finishes.
+In repository Settings → Pages, choose **Deploy from a branch**, select **main** and **/(root)**, then save. GitHub Pages publishes the root `index.html` after the deployment finishes. GitHub Pages can host this static MVP, but it cannot provide the secure backend services listed above.
