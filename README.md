@@ -17,13 +17,13 @@ Open `index.html` in a modern browser. There is no build step or package install
 - Event-aware written insights covering audience, session behaviour, most visited pages, activity types, date coverage, data quality and duplicates.
 - Dashboard filter that recalculates the metrics, charts, insights and record preview for the selected dimension value.
 - Computed analysis for numeric totals/averages/ranges, common categories, missing values and date coverage.
-- Data Analyst page with a local deterministic query helper for summaries, missing values, numeric statistics, record counts and category rankings.
+- Data Analyst page with built-in deterministic calculations plus an optional browser-hosted open-source Metriva AI model (WebLLM/Qwen 2.5 0.5B) for natural-language dataset questions. The model runs in the user's browser after a one-time model download; dataset context is passed locally to the model.
 - Saved report configurations in browser local storage.
 - Responsive layouts for desktop, tablet and mobile.
 
 ## Important limitations
 
-This is a **front-end prototype**, not a production SaaS. The Data Analyst helper is rule-based local code, **not a real generative AI model**. It supports a limited set of question patterns and does not provide open-ended reasoning. A real AI analyst requires a secure server-side model integration; API keys must never be embedded in browser JavaScript.
+This remains a **front-end prototype**, not a production SaaS. Metriva AI currently uses a small open-source model loaded in the browser through WebLLM and WebGPU. It requires a compatible browser/device and an internet connection for the initial model download. Model performance is limited by the user's hardware; if WebGPU or model loading is unavailable, built-in deterministic calculations remain available. It is not yet a hosted multi-user AI service, and the AI currently provides analysis and dashboard recommendations rather than directly applying dashboard edits.
 
 There is no authentication, cloud database, cross-device sync, team collaboration, live source connectors, sharing permissions, billing or production audit log. The current dataset remains in browser memory for the active session. Saved reports store configuration/metadata, not a copy of the uploaded file; re-import the same file to restore its data. Clearing browser storage can remove saved reports. Excel import needs an internet connection to load SheetJS.
 
@@ -33,7 +33,7 @@ No end-to-end browser test or production deployment has been completed yet. Keep
 
 1. Add automated browser tests for CSV/XLSX upload, filters, charts, saved reports and mobile navigation.
 2. Add secure accounts, backend storage and dataset versioning.
-3. Add a real AI analyst through a server-side integration with schema-aware tools and grounded answers.
+3. Expand Metriva AI with validated dashboard-edit actions, more capable open models, and an optional self-hosted inference service when hosting and GPU resources are available.
 4. Add connectors, sharing permissions, collaboration and audit logs.
 
 ## Static deployment
