@@ -1,38 +1,41 @@
 # Metriva
 
-Metriva is a browser-based analytics workspace MVP. It turns spreadsheet rows into calculated summaries, charts and saved dashboard snapshots.
+Metriva is a dataset-first analytics and dashboard-building MVP. The product flow is: upload a spreadsheet → inspect its schema → accept or edit suggested KPIs and charts → filter and configure the dashboard → ask questions about the data → save a dashboard.
 
 ## Run it
 
-Open `index.html` in a modern browser. There is no build step or package installation.
+Open `index.html` in a modern browser. No build step or package installation is required.
 
-## Working in-browser features
+## Current working prototype features
 
-- Responsive workspace with Overview, My dashboards, Data hub, Analyst, Reports and Settings.
-- Import CSV files directly in the browser, including quoted cells and comma-containing values.
-- Import Excel `.xlsx` and `.xls` files using SheetJS loaded on demand from jsDelivr. An internet connection is needed the first time Excel support loads.
-- Automatic detection of numeric, date-like and category columns.
-- KPI calculations, numeric trend chart, category breakdown, top-value bars and recent-row preview based on the active dataset.
-- Rule-based analyst questions calculated from the actual imported rows: totals, averages, row counts, top categories, missing values, columns and date trends.
+- CSV import with quoted-cell parsing; Excel `.xlsx` and `.xls` import via SheetJS loaded on demand from jsDelivr.
+- No pre-filled business dataset or fabricated metrics. A blank workspace is shown until the user imports data.
+- Column inference based on uploaded values: numeric, date, category and text.
+- Suggested metrics and visualisations are selected from detected columns, not hard-coded field names.
+- Editable KPI cards with Sum, Average, Count, Minimum and Maximum calculations.
+- Editable bar, line, area, donut and table visualisations with configurable dimension, measure and aggregation.
+- A dashboard-level dimension filter that updates KPI cards, charts and underlying records together.
+- Dataset preview and data profile.
+- Prompt interface with a local command interpreter for supported questions and dashboard actions (summaries, missing values, totals, averages, top categories, adding charts/metrics and date trends).
 - Save and reopen dashboard snapshots in browser local storage.
-- Export the active dataset as CSV and print/save the dashboard view as PDF.
-- Light/dark appearance and responsive mobile navigation.
-- File processing happens in the browser; imported data is not uploaded to a Metriva server.
+- Responsive layout and light/dark appearance.
 
-## Current limitations — not production SaaS yet
+## Important limitations
 
-This is a client-side MVP, not a multi-user production service. It has no user authentication, cloud database, cross-device sync, team workspaces, server-side authorization, live connectors, billing or real generative-AI integration. The Analyst is deterministic and rule-based; it does not use an LLM. Dashboard snapshots and imported data are stored only in the current browser and can be lost if browser storage is cleared. Large datasets may exceed browser storage limits. Excel import requires the external SheetJS CDN to be reachable.
+This is still a client-side MVP, not a production SaaS. The prompt interface is a deterministic local command interpreter, **not a connected generative AI model**. It supports a limited set of intents and should not be presented as general AI reasoning. A production AI copilot needs a secure backend and model-provider integration; API keys must never be placed in browser code.
 
-Do not store sensitive or business-critical data here as the only copy. Export and keep a backup.
+There is no authentication, cloud database, cross-device sync, team workspace, live data connector, server-side permissions, billing, or production audit log. Dashboard snapshots are stored in the current browser and may be lost if browser storage is cleared. Imported files are processed locally. Excel support requires the SheetJS CDN to load. Only the first worksheet is imported. Very large files may exceed browser storage or browser memory.
 
-## Recommended production milestones
+Do not use this prototype as the only copy of important business data. Keep the original spreadsheet and export backups.
 
-1. Add authentication and secure workspace membership.
-2. Add a backend database and object storage with per-user access rules.
-3. Move ingestion and large-file processing to a validated backend pipeline.
-4. Add a server-side AI provider integration with secrets kept off the client.
-5. Add real connectors, sharing permissions, audit logs, billing and automated tests.
+## Production roadmap
+
+1. Add authentication, secure workspaces and per-user authorization.
+2. Add database and object storage with reliable dataset versioning.
+3. Move file parsing and large-scale analytics to a secure backend.
+4. Connect a real AI copilot through a server-side provider integration with schema-aware tool calling and grounded responses.
+5. Add connectors, collaboration, dashboard sharing, audit logs, billing and automated tests.
 
 ## Deploy with GitHub Pages
 
-In repository Settings → Pages, choose **Deploy from a branch**, select **main** and **/(root)**, then save. GitHub Pages publishes the root `index.html` after the deployment finishes. GitHub Pages can host this static MVP, but it cannot provide the secure backend services listed above.
+In repository Settings → Pages, select **Deploy from a branch**, choose **main** and **/(root)**, then save. GitHub Pages can host this static prototype, but it cannot provide the secure backend capabilities listed above.
