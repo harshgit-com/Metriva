@@ -141,10 +141,11 @@ function smartAnswer(q){
 }
 function answer(q){const smart=smartAnswer(q);return smart||answerLegacy(q);}
 
-let aiEngine=null,aiLoading=false,aiModelId='Qwen2.5-3B-Instruct-q4f16_1-MLC';
+let aiEngine=null,aiLoading=false,aiModelId='Qwen2.5-0.5B-Instruct-q4f16_1-MLC';
 function chatBubble(text,kind=''){const box=$('#chat');if(!box)return null;const node=document.createElement('div');node.className='bubble'+(kind?' '+kind:'');node.textContent=String(text??'');box.appendChild(node);box.scrollTop=box.scrollHeight;return node}
 function setAIStatus(label,hint){const badge=$('#aiStatus'),info=$('#aiHint');if(badge)badge.textContent=label;if(info)info.textContent=hint}
-async function loadMetrivaAI(){if(aiEngine)return;if(aiLoading){while(aiLoading)await new Promise(resolve=>setTimeout(resolve,250));return;}aiLoading=true;const button=$('#loadAI');if(button){button.disabled=true;button.textContent='Loading…'}setAIStatus('DOWNLOADING MODEL','Metriva is preparing its stronger local model (about 1.7 GB). Keep this tab open.');chatBubble('Preparing the stronger Metriva AI model on this device. The first download may take several minutes and requires WebGPU.','');try{const webllm=await import('https://esm.run/@mlc-ai/web-llm');try{aiEngine=await webllm.CreateMLCEngine(aiModelId,{initProgressCallback:p=>{const msg=p&&p.text?p.text:'Loading stronger local model…';setAIStatus('LOADING',msg);if($('#aiHint'))$('#aiHint').textContent=msg}})}catch(primaryError){console.warn('3B model unavailable; trying lighter 1.5B model:',primaryError);aiModelId='Qwen2.5-1.5B-Instruct-q4f16_1-MLC';setAIStatus('TRYING LIGHTER MODEL','The stronger model could not start on this device. Trying a smaller model.');aiEngine=await webllm.CreateMLCEngine(aiModelId,{initProgressCallback:p=>{const msg=p&&p.text?p.text:'Loading fallback model…';setAIStatus('LOADING',msg);if($('#aiHint'))$('#aiHint').textContent=msg}})}setAIStatus('AI READY', 'Running '+aiModelId+' locally in this browser.');if(button){button.textContent='AI Ready';button.disabled=true}chatBubble('Metriva AI is ready. Ask questions naturally about your data, request explanations, or ask it to change the dashboard.','')}catch(err){console.error('Metriva local AI load failed:',err);setAIStatus('LOCAL AI UNAVAILABLE','This device could not start either local model. Built-in calculations remain available.');if(button){button.disabled=false;button.textContent='Retry loading AI'}chatBubble('I could not start the local AI model. Check Chrome or Edge WebGPU support and available graphics memory, then retry.','')}finally{aiLoading=false}}
+async function loadMetrivaAI(silent=false){if(aiEngine)return;if(aiLoading){while(aiLoading)await new Promise(resolve=>setTimeout(resolve,200));return;}aiLoading=true;const button=$('#loadAI');if(button){button.disabled=true;button.textContent='Loading…'}setAIStatus('PREPARING LOCAL AI','Loading the compact 0.5B model. First-time download depends on your internet speed.');if(!silent)chatBubble('Loading Metriva’s compact AI model. You can keep using the dashboard while it prepares.','');try{const webllm=await import('https://esm.run/@mlc-ai/web-llm');aiEngine=await webllm.CreateMLCEngine(aiModelId,{initProgressCallback:p=>{const msg=p&&p.text?p.text:'Preparing compact local model…';setAIStatus('LOADING AI',msg);if($('#aiHint'))$('#aiHint').textContent=msg}});setAIStatus('AI READY','Compact local model is ready on this device.');if(button){button.textContent='AI Ready';button.disabled=true}if(!silent)chatBubble('Metriva AI is ready. Ask a question in natural language.','')}catch(err){console.error('Metriva local AI load failed:',err);setAIStatus('LOCAL AI UNAVAILABLE','Built-in dataset calculations still work. Check WebGPU support and retry.');if(button){button.disabled=false;button.textContent='Retry loading AI'}if(!silent)chatBubble('The compact local AI could not start. Built-in calculations remain available; check Chrome or Edge WebGPU support and retry.','')}finally{aiLoading=false}}
+
 function datasetContext(){if(!state.rows.length)return 'No dataset is currently loaded.';const schema=state.cols.map(c=>({name:c,type:state.types[c],missing:state.rows.filter(r=>String(r[c]??'').trim()==='').length,unique:uniqueCount(state.rows,c)}));const numericStats={};nums().forEach(c=>{const a=state.rows.map(r=>numeric(r[c])).filter(v=>v!==null).sort((x,y)=>x-y);if(a.length){const sum=a.reduce((x,y)=>x+y,0);numericStats[c]={count:a.length,sum,average:sum/a.length,median:a.length%2?a[(a.length-1)/2]:(a[a.length/2-1]+a[a.length/2])/2,min:a[0],max:a[a.length-1]}}});const categoryProfiles={};dims().slice(0,8).forEach(c=>{const m=new Map();state.rows.forEach(r=>{const k=String(r[c]??'').trim()||'(blank)';m.set(k,(m.get(k)||0)+1)});categoryProfiles[c]=[...m].sort((a,b)=>b[1]-a[1]).slice(0,12)});const dateCol=analyseSuggestions().date,dateValues=dateCol?state.rows.map(r=>new Date(r[dateCol])).filter(d=>!isNaN(d)).sort((a,b)=>a-b):[];const dateProfile=dateValues.length?{field:dateCol,min:dateValues[0].toISOString(),max:dateValues[dateValues.length-1].toISOString()}:null;const sample=state.rows.slice(0,10).map(r=>Object.fromEntries(state.cols.slice(0,24).map(c=>[c,String(r[c]??'').slice(0,100)])));return JSON.stringify({file:state.file,totalRows:state.rows.length,filteredRows:currentRows().length,columns:schema,numericStats,categoryProfiles,dateProfile,sampleRows:sample},null,2).slice(0,18000)}
 
 function dashboardStateForAI(){return {title:state.dashboardAI.title||'Dashboard overview',customKpis:state.dashboardAI.kpis,customCharts:state.dashboardAI.charts,availableFields:state.cols.map(c=>({name:c,type:state.types[c]}))}}
@@ -171,31 +172,35 @@ if(/\\b(add|show|put|display|create|make|plot|visuali[sz]e)\\b/.test(t)&&(/\\b(c
 return null}
 async function addChat(q){
  const question=String(q??'').trim();if(!question)return;
- chatBubble(question,'me');const pending=chatBubble('Preparing Metriva AI…');const box=$('#chat');
+ chatBubble(question,'me');const pending=chatBubble('Analysing your dataset…');const box=$('#chat');
  try{
   let reply='',actions=[];
-  if(!aiEngine){if(pending)pending.textContent='Loading the local AI model. Your question will be sent automatically when it is ready…';await loadMetrivaAI();}
   const direct=parseDashboardFallback(question);
+  const instant=direct?null:answer(question);
   if(direct){reply=direct.reply;actions=direct.actions}
-  else if(aiEngine){
-   try{
-    const response=await aiEngine.chat.completions.create({messages:[
-     {role:'system',content:'You are Metriva, a careful data analyst. Answer natural-language questions directly, not only preset keyword prompts. Use the dataset context to infer intent. Ground claims in supplied data; never invent columns, values or causes. Distinguish correlation from causation. Return JSON: {"reply":"...","actions":[]}. Actions only when explicitly requested: set_title(title), add_kpi(field,aggregation sum|avg|count|unique,label), add_chart(dimension,measure exact field or __count,kind bar|line|donut,title), clear_ai_customizations. Dataset context: '+datasetContext()},
-     {role:'user',content:question}
-    ],temperature:0.2,max_tokens:650});
-    const raw=response.choices?.[0]?.message?.content?.trim()||'';
-    const clean=raw.replace(/^\x60\x60\x60(?:json)?/i,'').replace(/\x60\x60\x60$/,'').trim();
-    let parsed=null;
-    try{parsed=JSON.parse(clean)}catch(parseError){const first=clean.indexOf('{'),last=clean.lastIndexOf('}');if(first>=0&&last>first){try{parsed=JSON.parse(clean.slice(first,last+1))}catch(ignore){}}}
-    if(parsed&&typeof parsed==='object'){reply=String(parsed.reply||parsed.answer||clean).slice(0,2400);actions=Array.isArray(parsed.actions)?parsed.actions:[]}
-    else{reply=clean.slice(0,2400)||'I could not produce an answer. Please try asking another way.';actions=[]}
-   }catch(modelError){console.warn('Metriva model response fallback:',modelError);reply=answer(question)||'The local AI model encountered an error, and the built-in calculator could not interpret this question.';reply+='\n\nNote: This is the basic calculation fallback, not the language model. Retry loading Metriva AI for open-ended questions.'}
-  }else{reply=answer(question)||'Metriva could not start its local language model, so it cannot reliably interpret open-ended questions right now.';reply+='\n\nThe AI model did not load. Use an up-to-date Chrome or Edge browser with WebGPU enabled and enough available graphics memory, then select “Retry loading AI”.'}
+  else if(instant){reply=instant}
+  else{
+   if(!aiEngine){if(pending)pending.textContent=aiLoading?'Metriva AI is finishing its background setup…':'Preparing the compact AI model…';await loadMetrivaAI(true)}
+   if(aiEngine){
+    try{
+     const response=await aiEngine.chat.completions.create({messages:[
+      {role:'system',content:'You are Metriva, a careful data analyst. Answer natural-language questions directly. Use the dataset context to infer intent. Ground claims in supplied data; never invent columns, values or causes. Distinguish correlation from causation. Return JSON: {"reply":"...","actions":[]}. Actions only when explicitly requested: set_title(title), add_kpi(field,aggregation sum|avg|count|unique,label), add_chart(dimension,measure exact field or __count,kind bar|line|donut,title), clear_ai_customizations. Dataset context: '+datasetContext()},
+      {role:'user',content:question}
+     ],temperature:0.2,max_tokens:450});
+     const raw=response.choices?.[0]?.message?.content?.trim()||'';
+     const clean=raw.replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();
+     let parsed=null;try{parsed=JSON.parse(clean)}catch(e){const first=clean.indexOf('{'),last=clean.lastIndexOf('}');if(first>=0&&last>first){try{parsed=JSON.parse(clean.slice(first,last+1))}catch(ignore){}}}
+     if(parsed&&typeof parsed==='object'){reply=String(parsed.reply||parsed.answer||clean).slice(0,2000);actions=Array.isArray(parsed.actions)?parsed.actions:[]}
+     else reply=clean.slice(0,2000)||'I could not produce an answer. Try rephrasing your question.';
+    }catch(modelError){console.warn('Metriva model response fallback:',modelError);reply=answer(question)||'The local AI encountered a problem. Try a simpler question or retry the AI.'}
+   }else{reply=answer(question)||'The local AI could not start on this device. Try Chrome or Edge with WebGPU enabled, or use a specific dataset question for built-in calculations.'}
+  }
   const applied=applyDashboardActions(actions);if(applied.length)reply+='\n\nDashboard updated: '+applied.join('; ')+'.';
   if(pending)pending.textContent=reply;
  }catch(err){console.error('Metriva chat error:',err);if(pending)pending.textContent='I hit a problem processing that request. Please try again.'}
  if(box)box.scrollTop=box.scrollHeight;
 }
+
 function persistSaved(){try{localStorage.setItem('metriva_saved_v2',JSON.stringify(state.saved))}catch(e){toast('Could not save: browser storage is full.')}}
 function renderSaved(){if(!state.saved.length){$('#savedList').innerHTML='<div class="panel empty">No saved reports yet. Use “Save view” on your dashboard to save a configuration.</div>';return}$('#savedList').innerHTML=state.saved.map((d,i)=>'<div class="panel between"><div><b>'+esc(d.name)+'</b><div class="muted small">'+esc(d.file)+' · '+d.rows+' records · '+new Date(d.date).toLocaleString()+'</div></div><div class="toolbar"><button class="btn small" data-open="'+i+'">Open</button><button class="btn small" data-remove="'+i+'">Delete</button></div></div>').join('');$$('[data-open]').forEach(b=>b.onclick=()=>{let d=state.saved[+b.dataset.open];if(state.file!==d.file){toast('Re-import '+d.file+' to restore this report with its data.');go('data');return}state.filter=d.filter||'all';renderDashboard();go('dashboard')});$$('[data-remove]').forEach(b=>b.onclick=()=>{state.saved.splice(+b.dataset.remove,1);persistSaved();renderSaved()})}
 function saveView(){if(!state.rows.length)return toast('Import data before saving a view.');let name=prompt('Name this report:',state.file.replace(/\.[^.]+$/,'')+' overview');if(!name)return;state.saved.unshift({name,file:state.file,rows:state.rows.length,cols:state.cols,filter:state.filter,date:new Date().toISOString()});persistSaved();toast('Report configuration saved in this browser.')}
@@ -207,4 +212,5 @@ $('#dashFilter').onchange=e=>{let v=e.target.value;if(v==='all'){state.filter='a
 $('#saveDash').onclick=saveView;const questionInput=$('#question'),askButton=$('#ask');function submitQuestion(q){const text=String(q??'').trim();if(!text){toast('Type a question first.');questionInput.focus();return}addChat(text);questionInput.value='';questionInput.focus()}askButton.addEventListener('click',e=>{e.preventDefault();submitQuestion(questionInput.value)});questionInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submitQuestion(questionInput.value)}});$('#loadAI').addEventListener('click',loadMetrivaAI);$('#loadSample').addEventListener('click',loadSampleDataset);$('#openAIFromDash').addEventListener('click',()=>go('analyst'));document.querySelectorAll('.suggestion[data-q]').forEach(button=>button.addEventListener('click',e=>{e.preventDefault();submitQuestion(button.dataset.q)}));$('#theme').onclick=()=>{document.body.classList.toggle('dark');state.dark=document.body.classList.contains('dark')};$('#clearData').onclick=()=>{if(!confirm('Disconnect the current dataset? This clears the current dashboard data.'))return;state.rows=[];state.cols=[];state.types={};state.file='';state.filter='all';renderData();renderDashboard();toast('Dataset disconnected.')};$('#globalSearch').onkeydown=e=>{if(e.key==='Enter'){let q=e.target.value.trim();if(q){go('analyst');$('#question').value=q;addChat(q)}}};
 try{state.saved=JSON.parse(localStorage.getItem('metriva_saved_v2')||'[]')}catch(e){state.saved=[]}
 renderData();renderDashboard();refreshDatasetSuggestions();
+if(navigator.gpu)setTimeout(()=>{if(!aiEngine&&!aiLoading)loadMetrivaAI(true)},1200);else setAIStatus('BASIC MODE','WebGPU is unavailable. Built-in dataset calculations are ready.');
 })();</script></body></html>
